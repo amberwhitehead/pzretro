@@ -33,3 +33,13 @@ CXXFLAGS += -lpthread
 CFLAGS += -lpthread
 LDFLAGS += -lpthread -ldl
 endif
+# QuickJS-ng needs pthreads and 64-bit atomics for JS Atomics, which these
+# platforms lack. EMSCRIPTEN is its only switch to build without them.
+ifneq (,$(filter $(platform), ngc wii wiiu ctr psp1 ps2 gcw0 retrofw miyoo))
+CFLAGS += -DEMSCRIPTEN
+endif
+
+# uClibc does not provide malloc_usable_size()
+ifneq (,$(filter $(platform), gcw0 retrofw miyoo))
+SOURCES_C += $(SRC_DIR)/malloc_usable_size.c
+endif
