@@ -23,8 +23,7 @@ SOURCES_C += \
     $(QUICKJS_SRC_DIR)/libbf.c \
     $(QUICKJS_SRC_DIR)/libregexp.c \
     $(QUICKJS_SRC_DIR)/libunicode.c \
-    $(QUICKJS_SRC_DIR)/cutils.c \
-    $(QUICKJS_SRC_DIR)/quickjs-libc.c
+    $(QUICKJS_SRC_DIR)/cutils.c
 
 CFLAGS += -D_GNU_SOURCE -DCONFIG_VERSION=\"2024-01-13\"
 
