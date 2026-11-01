@@ -398,6 +398,41 @@ else ifeq ($(platform), gcw0)
 	CXXFLAGS += -fno-rtti -std=gnu++11
 	CFLAGS += -std=gnu11
 
+# RetroFW
+else ifeq ($(platform), retrofw)
+	TARGET := $(TARGET_NAME)_libretro.so
+	CC = /opt/retrofw-toolchain/usr/bin/mipsel-linux-gcc
+	CXX = /opt/retrofw-toolchain/usr/bin/mipsel-linux-g++
+	AR = /opt/retrofw-toolchain/usr/bin/mipsel-linux-ar
+	fpic := -fPIC
+	PLATFORM_DEFINES += -ffast-math -march=mips32 -mtune=mips32 -mhard-float
+	PLATFORM_DEFINES += -fomit-frame-pointer
+	SHARED := -shared -Wl,-version-script=link.T -Wl,-no-undefined
+	CXXFLAGS += -fno-rtti -std=gnu++11
+	CFLAGS += -std=gnu11
+
+# Miyoo
+else ifeq ($(platform), miyoo)
+	TARGET := $(TARGET_NAME)_libretro.so
+	CC = /opt/miyoo/usr/bin/arm-linux-gcc
+	CXX = /opt/miyoo/usr/bin/arm-linux-g++
+	AR = /opt/miyoo/usr/bin/arm-linux-ar
+	fpic := -fPIC
+	PLATFORM_DEFINES += -fomit-frame-pointer -ffast-math -mcpu=arm926ej-s
+	SHARED := -shared -Wl,-version-script=link.T -Wl,-no-undefined
+	CXXFLAGS += -fno-rtti -std=gnu++11
+	CFLAGS += -std=gnu11
+
+# PlayStation 2
+else ifeq ($(platform), ps2)
+	TARGET := $(TARGET_NAME)_libretro_$(platform).a
+	CC = mips64r5900el-ps2-elf-gcc$(EXE_EXT)
+	CXX = mips64r5900el-ps2-elf-g++$(EXE_EXT)
+	AR = mips64r5900el-ps2-elf-ar$(EXE_EXT)
+	PLATFORM_DEFINES := -DPS2 -D_EE -G0
+	PLATFORM_DEFINES += -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include
+	STATIC_LINKING = 1
+
 # Nintendo Wii
 else ifeq ($(platform), wii)
 	TARGET := $(TARGET_NAME)_libretro_$(platform).a
