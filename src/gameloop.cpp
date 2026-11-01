@@ -5,7 +5,7 @@
 
 #include "namespaced_bundled.h"
 
-void GameLoop::thread_func()
+void GameLoop::init()
 {
     js_context = std::unique_ptr<js::Context>(new js::Context());
 
@@ -127,23 +127,76 @@ void GameLoop::thread_func()
         std::string(bundled::___data_custom_main_js,
         bundled::___data_custom_main_js + bundled::___data_custom_main_js_len), "main.js");
 
-    while(js_thread_active) {
-        if (waiting_serialize) {
-            if (truncate_backups) {
-                js_context->eval(std::string("_serialize_truncate_backups = true;"), "serialize");
-            } else {
-                js_context->eval(std::string("_serialize_truncate_backups = false;"), "serialize");
-            }
-            js_context->eval(std::string("_serialized = serialize();"), "serialize");
-            serialized = js_context->get("_serialized");
-            waiting_serialize = false;
+}
+
+void GameLoop::handle_requests()
+{
+    if (waiting_serialize) {
+        if (truncate_backups) {
+            js_context->eval(std::string("_serialize_truncate_backups = true;"), "serialize");
+        } else {
+            js_context->eval(std::string("_serialize_truncate_backups = false;"), "serialize");
         }
-        if (waiting_deserialize) {
-            js_context->set("_serialized", serialized);
-            js_context->eval(std::string("deserialize(_serialized);"), "deserialize");
-            waiting_deserialize = false;
-        }
-        js_context->eval(std::string("main();"), "main");
+        js_context->eval(std::string("_serialized = serialize();"), "serialize");
+        serialized = js_context->get("_serialized");
+        waiting_serialize = false;
+    }
+    if (waiting_deserialize) {
+        js_context->set("_serialized", serialized);
+        js_context->eval(std::string("deserialize(_serialized);"), "deserialize");
+        waiting_deserialize = false;
+    }
+}
+
+void GameLoop::tick()
+{
+    handle_requests();
+    js_context->eval(std::string("main();"), "main");
+}
+
+#ifdef PZ_NO_THREADS
+
+GameLoop::GameLoop(std::string game_contents, bool use_puzzlescript_plus, bool use_custom_font)
+: game_contents(game_contents)
+, use_puzzlescript_plus(use_puzzlescript_plus)
+, use_custom_font(use_custom_font)
+, truncate_backups(false)
+, waiting_serialize(false)
+, waiting_deserialize(false)
+{
+    init();
+}
+
+GameLoop::~GameLoop()
+{
+}
+
+void GameLoop::step()
+{
+    tick();
+}
+
+std::string GameLoop::serialize()
+{
+    waiting_serialize = true;
+    handle_requests();
+    return serialized;
+}
+
+void GameLoop::deserialize(std::string data)
+{
+    serialized = data;
+    waiting_deserialize = true;
+    handle_requests();
+}
+
+#else
+
+void GameLoop::thread_func()
+{
+    init();
+    while (js_thread_active) {
+        tick();
     }
     // Destroy js context on exit
     js_context.reset(nullptr);
@@ -169,9 +222,8 @@ GameLoop::~GameLoop()
     js_thread.join();
 }
 
-void GameLoop::set_truncate()
+void GameLoop::step()
 {
-    truncate_backups = true;
 }
 
 std::string GameLoop::serialize()
@@ -190,4 +242,11 @@ void GameLoop::deserialize(std::string data)
     while (waiting_deserialize) {
         std::this_thread::sleep_for(std::chrono::duration<double>(0.001));
     }
+}
+
+#endif
+
+void GameLoop::set_truncate()
+{
+    truncate_backups = true;
 }

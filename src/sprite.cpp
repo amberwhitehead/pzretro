@@ -3,33 +3,32 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
-#include <mutex>
-#include <thread>
+#include "threads.h"
 #include <vector>
 
 #include "graphics.h"
 
 namespace sprite {
 
-std::mutex mutex;
+pz::mutex mutex;
 std::vector<Sprite> sprites{};
 
 int add_sprite(int width, int height)
 {
-    std::lock_guard<std::mutex> guard(mutex);
+    pz::lock_guard guard(mutex);
     sprites.emplace_back(width, height);
     return sprites.size() - 1;
 }
 
 void clear_sprites()
 {
-    std::lock_guard<std::mutex> guard(mutex);
+    pz::lock_guard guard(mutex);
     sprites.clear();
 }
 
 void fill_rect(int index, int x, int y, int w, int h, uint16_t color)
 {
-    std::lock_guard<std::mutex> guard(mutex);
+    pz::lock_guard guard(mutex);
     if (index < 0 || static_cast<size_t>(index) >= sprites.size())
     {
         return;
@@ -81,7 +80,7 @@ void draw(int index_destination, int index_source, int x, int y)
     int width;
     int height;
     {
-        std::lock_guard<std::mutex> guard(mutex);
+        pz::lock_guard guard(mutex);
         Sprite &src{sprites.at(index_source)};
         width = src.width;
         height = src.height;
@@ -91,7 +90,7 @@ void draw(int index_destination, int index_source, int x, int y)
 
 void draw_partial(int index_destination, int index_source, int sx, int sy, int width, int height, int dx, int dy)
 {
-    std::lock_guard<std::mutex> guard(mutex);
+    pz::lock_guard guard(mutex);
     Sprite &dst{sprites.at(index_destination)};
     Sprite &src{sprites.at(index_source)};
     // Compute clipped start and end ranges on source sprite
@@ -131,8 +130,8 @@ void draw_partial(int index_destination, int index_source, int sx, int sy, int w
 
 void render(int index)
 {
-    std::lock_guard<std::mutex> guard1(mutex);
-    std::lock_guard<std::mutex> guard2(graphics::mutex);
+    pz::lock_guard guard1(mutex);
+    pz::lock_guard guard2(graphics::mutex);
     Sprite &sprite{sprites.at(index)};
     for (int r = 0; r < sprite.height; r++) {
         std::copy(
@@ -144,7 +143,7 @@ void render(int index)
 
 int sprites_size()
 {
-    std::lock_guard<std::mutex> guard(mutex);
+    pz::lock_guard guard(mutex);
     return sprites.size();
 }
 

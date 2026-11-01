@@ -5,12 +5,11 @@
 #include <cstdlib>
 #include <map>
 #include <memory>
-#include <mutex>
+#include "threads.h"
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <stdexcept>
-#include <thread>
 #include <vector>
 
 #include "libretro.h"
@@ -394,6 +393,9 @@ void retro_run()
         }
     }
 
+    // Run the game loop on this thread when threads are unavailable
+    gameLoop->step();
+
     // Render audio frame
     std::vector<float> samples{audio::consume(audio::buffer_len)};
     std::vector<int16_t> isamples(audio::buffer_len * 2); // double for stereo
@@ -407,7 +409,7 @@ void retro_run()
 
     // Render video frame
     {
-        std::lock_guard<std::mutex> guard(graphics::screen_mutex);
+        pz::lock_guard guard(graphics::screen_mutex);
         video_cb(graphics::framebuffer_screen, graphics::width, graphics::height, sizeof(uint16_t) * graphics::stride);
     }
 
