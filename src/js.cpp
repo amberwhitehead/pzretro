@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
-#include <mutex>
+#include "threads.h"
 #include <sstream>
 #include <vector>
 
@@ -54,7 +54,7 @@ void fatal_handler(void */*udata*/, const char *msg)
 
 int js_getInt32(JSContext *ctx, JSValueConst &arg)
 {
-    int value{-1};
+    int32_t value{-1};
     if (JS_ToInt32(ctx, &value, arg)) {
         throw std::runtime_error("js_getInt32 exception");
     }
@@ -193,7 +193,12 @@ JSValue js_sprite_render(JSContext *ctx, JSValueConst /*this_val*/, int /*argc*/
 JSValue js_sleep(JSContext *ctx, JSValueConst /*this_val*/, int /*argc*/, JSValueConst *argv)
 {
     double delay_s{js_getNumber(ctx, argv[0])};
+#ifdef PZ_NO_THREADS
+    // The game loop is paced by retro_run() instead
+    (void)delay_s;
+#else
     std::this_thread::sleep_for(std::chrono::duration<double>(delay_s));
+#endif
     return JS_UNDEFINED;
 }
 
@@ -301,7 +306,7 @@ Context::~Context()
 
 void Context::eval(std::string code, std::string filename)
 {
-    std::lock_guard<std::mutex> guard(mutex);
+    pz::lock_guard guard(mutex);
     JSValue val = JS_Eval(qjs_ctx, code.c_str(), code.size(), filename.c_str(), 0);
     if (JS_IsException(val)) {
         std::cerr << "***** JavaScript error *****" << std::endl;
@@ -331,7 +336,7 @@ void Context::eval(std::string code, std::string filename)
 
 void Context::set(std::string name, std::string value)
 {
-    std::lock_guard<std::mutex> guard(mutex);
+    pz::lock_guard guard(mutex);
     JSValue global_obj = JS_GetGlobalObject(qjs_ctx);
     JS_SetPropertyStr(qjs_ctx, global_obj, name.c_str(), JS_NewStringLen(qjs_ctx, value.c_str(), value.size()));
     JS_FreeValue(qjs_ctx, global_obj);
@@ -339,7 +344,7 @@ void Context::set(std::string name, std::string value)
 
 std::string Context::get(std::string name)
 {
-    std::lock_guard<std::mutex> guard(mutex);
+    pz::lock_guard guard(mutex);
     std::string result;
     JSValue global_obj = JS_GetGlobalObject(qjs_ctx);
     JSValue v = JS_GetPropertyStr(qjs_ctx, global_obj, name.c_str());

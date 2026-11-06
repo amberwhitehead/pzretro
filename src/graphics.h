@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <mutex>
+#include "threads.h"
 
 namespace graphics {
 
@@ -16,10 +16,10 @@ extern uint16_t framebuffer[];
 extern uint16_t framebuffer_screen[];
 
 // Mutex for all graphics access to framebuffer
-extern std::mutex mutex;
+extern pz::mutex mutex;
 
 // Mutex for all graphics access to screen framebuffer
-extern std::mutex screen_mutex;
+extern pz::mutex screen_mutex;
 
 // Clear all framebuffer
 void clear();

@@ -1,15 +1,17 @@
 #include "audio.h"
 
-#include <mutex>
+#include <cstddef>
+
+#include "threads.h"
 
 namespace audio {
 
 std::vector<float> buffer{};
-std::mutex mutex;
+pz::mutex mutex;
 
 std::vector<float> consume(int n)
 {
-    std::lock_guard<std::mutex> guard(mutex);
+    pz::lock_guard guard(mutex);
     std::vector<float> result(n);
     size_t len{buffer.size() < static_cast<size_t>(n) ? buffer.size() : n};
     std::copy(buffer.data(), buffer.data() + len, result.data());
@@ -19,7 +21,7 @@ std::vector<float> consume(int n)
 
 void play(std::vector<float> &samples)
 {
-    std::lock_guard<std::mutex> guard(mutex);
+    pz::lock_guard guard(mutex);
     // len is smaller of sizes
     size_t bsize{buffer.size()};
     size_t ssize{samples.size()};

@@ -23,18 +23,6 @@ include:
   - project: 'libretro-infrastructure/ci-templates'
     file: '/windows-i686-mingw.yml'
 
-  # Windows msvc10 64-bit
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/windows-x64-msvc10-msys2.yml'
-
-  # Windows msvc10 32-bit
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/windows-i686-msvc10-msys2.yml'
-
-  # Windows msvc05 32-bit
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/windows-i686-msvc05-msys2.yml'
-
   # Linux 64-bit
   - project: 'libretro-infrastructure/ci-templates'
     file: '/linux-x64.yml'
@@ -42,6 +30,10 @@ include:
   # Linux 32-bit
   - project: 'libretro-infrastructure/ci-templates'
     file: '/linux-i686.yml'
+
+  # Linux 64-bit (ARM)
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/linux-aarch64.yml'
 
   # MacOS 64-bit
   - project: 'libretro-infrastructure/ci-templates'
@@ -114,6 +106,10 @@ include:
   - project: 'libretro-infrastructure/ci-templates'
     file: '/emscripten-static.yml'
 
+  # webOS 32-bit (LGTV)
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/webos-make.yml'
+
 # Stages for building
 stages:
   - build-prepare
@@ -137,24 +133,6 @@ libretro-build-windows-i686:
     - .libretro-windows-i686-mingw-make-default
     - .core-defs
 
-# Windows msvc10 64-bit
-libretro-build-windows-msvc10-x64:
-  extends:
-    - .libretro-windows-x64-msvc10-msys2-make-default
-    - .core-defs
-
-# Windows msvc10 32-bit
-libretro-build-windows-msvc10-i686:
-  extends:
-    - .libretro-windows-i686-msvc10-msys2-make-default
-    - .core-defs
-
-# Windows msvc05 32-bit
-libretro-build-windows-msvc05-i686:
-  extends:
-    - .libretro-windows-i686-msvc05-msys2-make-default
-    - .core-defs
-
 # Linux 64-bit
 libretro-build-linux-x64:
   extends:
@@ -165,6 +143,12 @@ libretro-build-linux-x64:
 libretro-build-linux-i686:
   extends:
     - .libretro-linux-i686-make-default
+    - .core-defs
+
+# Linux 64-bit (ARM)
+libretro-build-linux-aarch64:
+  extends:
+    - .libretro-linux-aarch64-make-default
     - .core-defs
 
 # MacOS 64-bit
@@ -300,4 +284,10 @@ libretro-build-miyoo-arm32:
 libretro-build-emscripten:
   extends:
     - .libretro-emscripten-static-retroarch-master
+    - .core-defs
+
+# webOS
+libretro-build-webos-armv7a:
+  extends:
+    - .libretro-webos-armv7a-make-default
     - .core-defs

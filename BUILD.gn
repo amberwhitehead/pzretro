@@ -108,7 +108,6 @@ source_set("quickjs") {
         "src/quickjs-ng/libregexp.c",
         "src/quickjs-ng/libunicode.c",
         "src/quickjs-ng/cutils.c",
-        "src/quickjs-ng/quickjs-libc.c",
     ]
     include_dirs = [
         "src/quickjs-ng",

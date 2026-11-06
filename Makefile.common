@@ -23,8 +23,7 @@ SOURCES_C += \
     $(QUICKJS_SRC_DIR)/libbf.c \
     $(QUICKJS_SRC_DIR)/libregexp.c \
     $(QUICKJS_SRC_DIR)/libunicode.c \
-    $(QUICKJS_SRC_DIR)/cutils.c \
-    $(QUICKJS_SRC_DIR)/quickjs-libc.c
+    $(QUICKJS_SRC_DIR)/cutils.c
 
 CFLAGS += -D_GNU_SOURCE -DCONFIG_VERSION=\"2024-01-13\"
 
@@ -33,4 +32,25 @@ ifeq (,$(findstring msvc,$(platform)))
 CXXFLAGS += -lpthread
 CFLAGS += -lpthread
 LDFLAGS += -lpthread -ldl
+endif
+# QuickJS-ng needs pthreads and 64-bit atomics for JS Atomics, which these
+# platforms lack. EMSCRIPTEN is its only switch to build without them.
+ifneq (,$(filter $(platform), ngc wii wiiu ctr psp1 ps2 gcw0 retrofw miyoo))
+CFLAGS += -DEMSCRIPTEN
+endif
+
+# int32_t is long on these platforms, and QuickJS-ng passes int* in places
+ifneq (,$(filter $(platform), psp1 ps2 ctr))
+CFLAGS += -Wno-incompatible-pointer-types
+endif
+
+# No std::thread or std::mutex, so run the game loop on the main thread
+ifneq (,$(filter $(platform), ctr))
+CFLAGS += -DPZ_NO_THREADS
+CXXFLAGS += -DPZ_NO_THREADS
+endif
+
+# uClibc does not provide malloc_usable_size()
+ifneq (,$(filter $(platform), gcw0 retrofw miyoo))
+SOURCES_C += $(SRC_DIR)/malloc_usable_size.c
 endif

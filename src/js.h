@@ -3,9 +3,8 @@
 #include <atomic>
 #include <cstdint>
 #include <functional>
-#include <mutex>
+#include "threads.h"
 #include <string>
-#include <thread>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -27,7 +26,7 @@ extern void set_error_print(std::function<void(std::string)> func);
 
 class Context {
     // Mutex for all external access to js context
-    std::mutex mutex;
+    pz::mutex mutex;
 
     JSRuntime *qjs_rt;
     JSContext *qjs_ctx;
